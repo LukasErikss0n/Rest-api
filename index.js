@@ -7,11 +7,12 @@ const port = 3000
 
 
 app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 app.use(express.static('public'))
 
 
 app.get("/", (req, res) =>{
-    res.send("<h1>Dokumentation av olika API</h1><p>/user - returnerar alla användare</p>")
+    res.send("<h1>Dokumentation av olika API</h1><p>/users - returnerar alla användare</p>")
 })
 
 
@@ -19,8 +20,6 @@ app.get("/users", async(req, res) =>{
     if (Object.keys(req.query).length > 0) {
         let id = req.query.id || null
         let age = req.query.age || null
-        console.log("id", id)
-        console.log("age", age)
         let users = await db.speUser(id, age)
         res.send(users)
     } else {
@@ -32,8 +31,32 @@ app.get("/users", async(req, res) =>{
 app.get("/users/:id", async (req,res) =>{
     let id = req.params.id
     let users = await db.speUser(id, null)
-    console.log(users)
     res.send(users)
+})
+
+function  isValidUserData(body){
+    return body && body.user_name
+}
+
+app.post("/posta-hit", async(req, res) =>{
+    if(isValidUserData(req.body)){
+        let name = req.body.user_name
+        let age = req.body.age
+        let userInfo = req.body.user_info
+    
+        let ins = await db.addUser(name, age, userInfo)
+        let sendBack = {
+            user_name: `${name}`,
+            age: age,
+            user_info: `${userInfo}`,
+            id: ins.insertId
+        }
+        res.json(sendBack)
+
+    }else{
+        res.sendStatus(422)
+    }
+   
 })
 
 app.listen(port, ()=>{
