@@ -29,6 +29,13 @@ async function addUser(name, age, userInfo){
     return result[0]
 }
 
+
+async function uppdateUser(name, age, userInfo, id){
+    const con = await connection()
+    const result = await con.execute("UPDATE users SET user_name = ?, age = ?, user_info = ? WHERE id = ?", [name, age, userInfo, id])
+    await con.end()
+    return result[0]
+}
 module.exports = {
-    users, speUser, addUser,
+    users, speUser, addUser, uppdateUser,
 }

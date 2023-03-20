@@ -59,6 +59,39 @@ app.post("/posta-hit", async(req, res) =>{
    
 })
 
+app.put("/users/:id", async(req,res) =>{
+    if(isValidUserData(req.body)){
+        let id = req.params.id
+        let valueAge = 0
+        let checkIfIdExist = await db.speUser(id, valueAge)
+        console.log(checkIfIdExist)
+        if(checkIfIdExist.length > 0){
+            let name = req.body.user_name
+            let age = req.body.age
+            let userInfo = req.body.user_info
+
+            let uppdate = await db.uppdateUser(name, age, userInfo, id)  
+
+            
+            let sendBack = {
+                user_name: `${name}`,
+                age: age,
+                user_info: `${userInfo}`,
+                id: `${id}`
+            }
+            res.json(sendBack)
+
+        }else{
+            res.sendStatus(422)
+            
+        }
+        
+    }else{
+        res.sendStatus(422)
+    }
+   
+})
+
 app.listen(port, ()=>{
     console.log("Lisining in port 3000")
 })
