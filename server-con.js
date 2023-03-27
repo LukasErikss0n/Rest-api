@@ -22,9 +22,9 @@ async function speUser(id, age){
     return result[0]
 }
 
-async function addUser(name, age, userInfo){
+async function addUser(name, password, age, userInfo){
     const con = await connection()
-    const result = await con.execute("INSERT users(user_name, age, user_info) VALUES(?, ?, ?)", [name, age, userInfo])
+    const result = await con.execute("INSERT users(user_name, password, age, user_info) VALUES(?, ?, ?, ?)", [name, password,age, userInfo])
     await con.end()
     return result[0]
 }
@@ -36,6 +36,13 @@ async function uppdateUser(name, age, userInfo, id){
     await con.end()
     return result[0]
 }
+
+async function login(username){
+    const con = await connection()
+    const result = await con.execute("SELECT * FROM users WHERE user_name = ?", [username])
+    await con.end()
+    return result[0]
+}
 module.exports = {
-    users, speUser, addUser, uppdateUser,
+    users, speUser, addUser, uppdateUser, login,
 }

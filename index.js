@@ -16,6 +16,16 @@ app.get("/", (req, res) =>{
 })
 
 
+
+const crypto = require('crypto');
+
+function hash(data) {
+    const hash = crypto.createHash('sha256');
+    hash.update(data);
+    return hash.digest('hex')
+}
+   
+
 app.get("/users", async(req, res) =>{
     if (Object.keys(req.query).length > 0) {
         let id = req.query.id || null
@@ -43,8 +53,10 @@ app.post("/posta-hit", async(req, res) =>{
         let name = req.body.user_name
         let age = req.body.age
         let userInfo = req.body.user_info
-    
-        let ins = await db.addUser(name, age, userInfo)
+
+        let addPasswordHashed = hash(req.body.password)
+
+        let ins = await db.addUser(name, addPasswordHashed,age, userInfo)
         let sendBack = {
             user_name: `${name}`,
             age: age,
@@ -71,7 +83,6 @@ app.put("/users/:id", async(req,res) =>{
             let userInfo = req.body.user_info
 
             let uppdate = await db.uppdateUser(name, age, userInfo, id)  
-
             
             let sendBack = {
                 user_name: `${name}`,
@@ -91,6 +102,28 @@ app.put("/users/:id", async(req,res) =>{
     }
    
 })
+
+
+
+app.post("/loggin", async(req, res) =>{
+    let username = req.body.username
+    let passwordHash = hash(req.body.password)
+    let user = await db.login(username)
+    if(passwordHash === user[0].password){
+        let sendBack = {
+            user_name: `${username}`,
+            age: user[0].age,
+            user_info: `${user[0].user_info}`,
+            id: user[0].id
+        }
+        res.json(sendBack)
+    }else{
+        res.sendStatus(401)
+    }
+    
+})
+
+
 
 app.listen(port, ()=>{
     console.log("Lisining in port 3000")
