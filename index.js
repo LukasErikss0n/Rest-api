@@ -4,6 +4,8 @@ const app = express();
 const http = require('http');
 const db = require("./server-con")
 const port = 3000
+const crypto = require('crypto');
+
 
 
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -12,12 +14,14 @@ app.use(express.static('public'))
 
 
 app.get("/", (req, res) =>{
-    res.send("<h1>Dokumentation av olika API</h1><p>/users - returnerar alla användare</p>")
+    res.send(`<h1>Dokumentation av olika API</h1>
+    <ul><li>/users - returnerar alla användare</li>
+    <li>/users?id=x&age=y - returnerar alla användare som matchar nyklarna, OBS! båda nycklar behövs inte, välj vilken som passar bäst</li>
+    <li>/users:id - returnerar användare med id:et </li>
+    
+    </ul>`)
 })
 
-
-
-const crypto = require('crypto');
 
 function hash(data) {
     const hash = crypto.createHash('sha256');
@@ -25,7 +29,6 @@ function hash(data) {
     return hash.digest('hex')
 }
    
-
 app.get("/users", async(req, res) =>{
     if (Object.keys(req.query).length > 0) {
         let id = req.query.id || null
@@ -76,7 +79,6 @@ app.put("/users/:id", async(req,res) =>{
         let id = req.params.id
         let valueAge = 0
         let checkIfIdExist = await db.speUser(id, valueAge)
-        console.log(checkIfIdExist)
         if(checkIfIdExist.length > 0){
             let name = req.body.user_name
             let age = req.body.age
@@ -94,7 +96,6 @@ app.put("/users/:id", async(req,res) =>{
 
         }else{
             res.sendStatus(422)
-            
         }
         
     }else{
@@ -103,28 +104,32 @@ app.put("/users/:id", async(req,res) =>{
    
 })
 
-
+var jwt = require('jsonwebtoken')
 
 app.post("/loggin", async(req, res) =>{
+ 
+
     let username = req.body.username
     let passwordHash = hash(req.body.password)
     let user = await db.login(username)
     if(passwordHash === user[0].password){
-        let sendBack = {
-            user_name: `${username}`,
-            age: user[0].age,
-            user_info: `${user[0].user_info}`,
-            id: user[0].id
+        let payload ={
+            sub: user[0].id,
+            name: `${username}`,
+            role: user[0].role || null,
         }
-        res.json(sendBack)
+
+        let secret = "hard to crack"
+        let secretHash = hash(secret)
+        let token = jwt.sign(payload, secretHash)
+      
+        res.json(token)
     }else{
         res.sendStatus(401)
     }
     
 })
 
-
-
 app.listen(port, ()=>{
-    console.log("Lisining in port 3000")
+    console.log(`Lisining in port ${port}` )
 })
