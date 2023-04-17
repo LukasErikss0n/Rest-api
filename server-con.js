@@ -43,6 +43,30 @@ async function login(username){
     await con.end()
     return result[0]
 }
+
+
+
+var jwt = require('jsonwebtoken')
+
+async function authorization(req, res, SECRETHASH){
+    let authHeader = req.headers['authorization']
+    if(authHeader === undefined){
+     res.status(401)
+     res.send("Aunhotorized")
+     return false
+    }
+    let token = authHeader.slice(7)   
+
+    let verify
+    try {
+      verify = jwt.verify(token, SECRETHASH)
+    } catch (err) {
+      console.log(err) 
+      res.status(401).send('Invalid auth token')
+      return false
+    }
+    return verify
+}
 module.exports = {
-    users, speUser, addUser, uppdateUser, login,
+    users, speUser, addUser, uppdateUser, login, authorization,
 }

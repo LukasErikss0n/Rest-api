@@ -15,9 +15,9 @@ app.use(express.static('public'))
 
 app.get("/", (req, res) =>{
     res.send(`<h1>Dokumentation av olika API</h1>
-    <ul><li>/users - returnerar alla användare</li>
+    <ul><li>/users - returnerar alla användare (behöver vara inloggad)</li>
     <li>/users?id=x&age=y - returnerar alla användare som matchar nyklarna, OBS! båda nycklar behövs inte, välj vilken som passar bäst</li>
-    <li>/users:id - returnerar användare med id:et </li>
+    <li>/users:id - returnerar användare med id:et (Behöver vara inloggad) </li>
     
     </ul>`)
 })
@@ -30,21 +30,28 @@ function hash(data) {
 }
    
 app.get("/users", async(req, res) =>{
-    if (Object.keys(req.query).length > 0) {
-        let id = req.query.id || null
-        let age = req.query.age || null
-        let users = await db.speUser(id, age)
-        res.send(users)
-    } else {
-        let users = await db.users()
-        res.send(users) 
+    let userInfo = db.authorization(req,res, SECRETHASH)
+    if (userInfo != false){
+        if (Object.keys(req.query).length > 0) {
+            let id = req.query.id || null
+            let age = req.query.age || null
+            let users = await db.speUser(id, age)
+            res.send(users)
+        } else {
+            let users = await db.users()
+            res.send(users) 
+        }
     }
 })
 
 app.get("/users/:id", async (req,res) =>{
-    let id = req.params.id
-    let users = await db.speUser(id, null)
-    res.send(users)
+    let userInfo = db.authorization(req,res, SECRETHASH)
+    if (userInfo != false){
+        let id = req.params.id
+        let users = await db.speUser(id, null)
+        res.send(users)
+    }
+    
 })
 
 function  isValidUserData(body){
@@ -104,11 +111,13 @@ app.put("/users/:id", async(req,res) =>{
    
 })
 
+
+
 var jwt = require('jsonwebtoken')
+const SECRET = "hard to crack"
+const SECRETHASH = hash(SECRET)
 
 app.post("/loggin", async(req, res) =>{
- 
-
     let username = req.body.username
     let passwordHash = hash(req.body.password)
     let user = await db.login(username)
@@ -117,19 +126,18 @@ app.post("/loggin", async(req, res) =>{
             sub: user[0].id,
             name: `${username}`,
             role: user[0].role || null,
+            expiresIn: '1h',
         }
-
-        let secret = "hard to crack"
-        let secretHash = hash(secret)
-        let token = jwt.sign(payload, secretHash)
-      
+        let token = jwt.sign(payload, SECRETHASH)
         res.json(token)
     }else{
         res.sendStatus(401)
-    }
-    
+    }  
 })
 
+
+
+
 app.listen(port, ()=>{
-    console.log(`Lisining in port ${port}` )
+    console.log(`Lisining on port ${port}` )
 })
