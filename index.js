@@ -15,9 +15,11 @@ app.use(express.static('public'))
 
 app.get("/", (req, res) =>{
     res.send(`<h1>Dokumentation av olika API</h1>
-    <ul><li>/users - returnerar alla användare (behöver vara inloggad)</li>
-    <li>/users?id=x&age=y - returnerar alla användare som matchar nyklarna, OBS! båda nycklar behövs inte, välj vilken som passar bäst</li>
-    <li>/users:id - returnerar användare med id:et (Behöver vara inloggad) </li>
+    <ul><li> GET /users - returnerar alla användare (behöver vara inloggad)</li>
+    <li>POST /users?id=x&age=y - returnerar alla användare som matchar nyklarna, OBS! båda nycklar behövs inte, välj vilken som passar bäst</li>
+    <li>POST /users:id - returnerar användare med id:et (Behöver vara inloggad) </li>
+    <li>POST /posta-hit - skapa ett konto</li>
+    <li>POST /loggin - logga in på ditt konto </li>
     
     </ul>`)
 })
