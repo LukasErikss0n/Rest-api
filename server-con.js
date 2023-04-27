@@ -30,9 +30,9 @@ async function addUser(name, password, age, userInfo){
 }
 
 
-async function uppdateUser(name, age, userInfo, id){
+async function uppdateUser(name, password, age, userInfo, id){
     const con = await connection()
-    const result = await con.execute("UPDATE users SET user_name = ?, age = ?, user_info = ? WHERE id = ?", [name, age, userInfo, id])
+    const result = await con.execute("UPDATE users SET user_name = ?, password = ?, age = ?, user_info = ? WHERE id = ?", [name, password, age, userInfo, id])
     await con.end()
     return result[0]
 }
@@ -67,6 +67,13 @@ async function authorization(req, res, SECRETHASH){
     }
     return verify
 }
+
+async function checkIfUserExists(name){
+    const con = await connection()
+    const result = await con.execute("SELECT * FROM users WHERE user_name = ?",[name])
+    await con.end()
+    return result[0]
+}
 module.exports = {
-    users, speUser, addUser, uppdateUser, login, authorization,
+    users, speUser, addUser, uppdateUser, login, authorization, checkIfUserExists,
 }

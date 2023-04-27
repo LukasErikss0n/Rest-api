@@ -64,19 +64,25 @@ function  isValidUserData(body){
 app.post("/posta-hit", async(req, res) =>{
     if(isValidUserData(req.body)){
         let name = req.body.user_name
-        let age = req.body.age
-        let userInfo = req.body.user_info
+        let usernameAlreadyExists = await db.checkIfUserExists(name)
+        if(usernameAlreadyExists.length < 1){
+            let age = req.body.age
+            let userInfo = req.body.user_info
 
-        let addPasswordHashed = hash(req.body.password)
+            let addPasswordHashed = hash(req.body.password)
 
-        let ins = await db.addUser(name, addPasswordHashed,age, userInfo)
-        let sendBack = {
-            user_name: `${name}`,
-            age: age,
-            user_info: `${userInfo}`,
-            id: ins.insertId
+            let ins = await db.addUser(name, addPasswordHashed,age, userInfo)
+            let sendBack = {
+                user_name: `${name}`,
+                age: age,
+                user_info: `${userInfo}`,
+                id: ins.insertId
+            }
+            res.json(sendBack)
+
+        }else{
+            res.send("Username already exist")
         }
-        res.json(sendBack)
 
     }else{
         res.sendStatus(422)
@@ -87,29 +93,37 @@ app.post("/posta-hit", async(req, res) =>{
 app.put("/users/:id", async(req,res) =>{
     if(isValidUserData(req.body)){
         let id = req.params.id
-        let valueAge = 0
+        let valueAge = null
         let checkIfIdExist = await db.speUser(id, valueAge)
         if(checkIfIdExist.length > 0){
             let name = req.body.user_name
-            let age = req.body.age
-            let userInfo = req.body.user_info
+            let usernameAlreadyExists = await db.checkIfUserExists(name)
+            if(usernameAlreadyExists.length < 1){
+                let age = req.body.age
+                let userInfo = req.body.user_info
+                let password = hash(req.body.password)
 
-            let uppdate = await db.uppdateUser(name, age, userInfo, id)  
-            
-            let sendBack = {
-                user_name: `${name}`,
-                age: age,
-                user_info: `${userInfo}`,
-                id: `${id}`
+    
+                let uppdate = await db.uppdateUser(name, password, age, userInfo, id)  
+                
+                let sendBack = {
+                    user_name: `${name}`,
+                    age: age,
+                    user_info: `${userInfo}`,
+                    id: `${id}`
+                }
+                res.json(sendBack)
+            }else{
+                res.send("user already exists")
             }
-            res.json(sendBack)
+           
 
         }else{
             res.sendStatus(422)
         }
         
     }else{
-        res.sendStatus(422)
+        res.sendStatus(421)
     }
    
 })
